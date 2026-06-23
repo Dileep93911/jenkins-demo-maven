@@ -17,26 +17,26 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                sh 'mvn clean package'
             }
         }
 
-        stage('Test') {
+        stage('Deploy') {
             steps {
-                sh 'mvn test'
+                sh '''
+                pkill -f jenkins-demo-maven.jar || true
+                nohup java -jar target/jenkins-demo-maven.jar > app.log 2>&1 &
+                '''
             }
         }
+    }
 
-        stage('Package') {
-            steps {
-                sh 'mvn package'
-            }
+    post {
+        success {
+            echo 'Application deployed successfully!'
         }
-
-        stage('Archive') {
-            steps {
-                archiveArtifacts artifacts: 'target/*.jar'
-            }
+        failure {
+            echo 'Deployment failed!'
         }
     }
 }
